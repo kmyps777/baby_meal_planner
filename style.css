@@ -41,6 +41,14 @@ input, textarea, select { font-family: var(--font); }
 .screen { display: none; }
 .screen.active { display: block; }
 
+#login-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  overflow-y: auto;
+}
+#login-screen.active { display: flex; }
+
 /* ════ LOGIN ════ */
 #login-screen {
   min-height: 100vh;

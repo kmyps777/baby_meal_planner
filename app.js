@@ -59,6 +59,7 @@ document.getElementById('btn-logout').addEventListener('click', () => auth.signO
 function showLogin() {
   document.getElementById('login-screen').classList.add('active');
   document.getElementById('app-screen').classList.remove('active');
+  window.scrollTo(0, 0);
 }
 function showApp(user) {
   document.getElementById('login-screen').classList.remove('active');
@@ -66,6 +67,7 @@ function showApp(user) {
   const av = document.getElementById('user-avatar');
   av.src = user.photoURL || '';
   av.style.display = user.photoURL ? 'block' : 'none';
+  window.scrollTo(0, 0);
   initAllTabs();
 }
 
