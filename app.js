@@ -30,13 +30,18 @@ function userCol(col) {
 // ════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════
+// 리다이렉트 로그인 결과 처리
+auth.getRedirectResult().then(result => {
+  if (result && result.user) { currentUser = result.user; showApp(result.user); }
+}).catch(e => console.log('redirect result:', e));
+
 auth.onAuthStateChanged(user => {
   if (user) { currentUser = user; showApp(user); }
   else       { currentUser = null; showLogin(); }
 });
 
 document.getElementById('btn-google-login').addEventListener('click', () => {
-  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()).catch(e => toast('로그인 실패: ' + e.message));
+  auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
 });
 document.getElementById('btn-logout').addEventListener('click', () => auth.signOut());
 
