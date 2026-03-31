@@ -799,7 +799,7 @@ function openCubeModal(id) {
     document.getElementById('cube-g').value = '';
     document.getElementById('cube-count').value = '';
     document.getElementById('cube-made-date').value = fmtDate(new Date());
-    document.getElementById('cube-expire-days').value = '';
+    document.getElementById('cube-expire-days').value = 14;
     editIngredients = [];
   }
   document.getElementById('cube-ingredient-input').value = '';
