@@ -653,7 +653,17 @@ function openCubePicker(cat) {
 }
 function renderCubePickerList(search) {
   const list = document.getElementById('cube-picker-list');
-  const active = cubeItems.filter(c => c.status === 'active');
+  const catOrder = { base:0, protein:1, other:2 };
+  const active = cubeItems
+    .filter(c => c.status === 'active')
+    .slice().sort((a,b) => {
+      const catDiff = (catOrder[a.category]||0) - (catOrder[b.category]||0);
+      if (catDiff !== 0) return catDiff;
+      // 같은 카테고리 안에서는 유통기한 임박순
+      const expA = addDays(a.madeDate, a.expireDays||14);
+      const expB = addDays(b.madeDate, b.expireDays||14);
+      return expA.localeCompare(expB);
+    });
   const filtered = search ? active.filter(c => c.name.includes(search)) : active;
   if (!filtered.length) { list.innerHTML = '<div style="color:var(--text3);font-size:13px;padding:10px">큐브가 없어요.</div>'; return; }
   list.innerHTML = filtered.map(c => {
