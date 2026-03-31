@@ -57,18 +57,25 @@ document.getElementById('btn-google-login').addEventListener('click', () => {
 document.getElementById('btn-logout').addEventListener('click', () => auth.signOut());
 
 function showLogin() {
-  document.getElementById('login-screen').classList.add('active');
-  document.getElementById('app-screen').classList.remove('active');
+  const login = document.getElementById('login-screen');
+  const app   = document.getElementById('app-screen');
+  login.classList.add('active');
+  app.classList.remove('active');
   window.scrollTo(0, 0);
 }
 function showApp(user) {
-  document.getElementById('login-screen').classList.remove('active');
-  document.getElementById('app-screen').classList.add('active');
-  const av = document.getElementById('user-avatar');
-  av.src = user.photoURL || '';
-  av.style.display = user.photoURL ? 'block' : 'none';
+  const login = document.getElementById('login-screen');
+  const app   = document.getElementById('app-screen');
+  // 로그인 화면 완전히 숨기기
+  login.classList.remove('active');
+  login.style.display = 'none';
+  // 앱 화면 표시
+  app.classList.add('active');
+  app.style.display = 'block';
   window.scrollTo(0, 0);
-  initAllTabs();
+  const av = document.getElementById('user-avatar');
+  if (av) { av.src = user.photoURL || ''; av.style.display = user.photoURL ? 'block' : 'none'; }
+  try { initAllTabs(); } catch(e) { console.error('initAllTabs error:', e); }
 }
 
 // ════════════════════════════════════════
