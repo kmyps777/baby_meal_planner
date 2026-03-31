@@ -104,6 +104,25 @@
         <div class="cube-header-row">
           <button id="btn-add-cube" class="btn-primary small">+ 큐브 등록</button>
         </div>
+        <!-- 정렬 + 카테고리 필터 -->
+        <div class="cube-controls">
+          <div class="cube-control-group">
+            <span class="cube-control-label">정렬</span>
+            <div class="cube-control-btns">
+              <button class="cube-sort-btn active" data-sort="expire">유통기한순</button>
+              <button class="cube-sort-btn" data-sort="category">카테고리순</button>
+            </div>
+          </div>
+          <div class="cube-control-group">
+            <span class="cube-control-label">종류</span>
+            <div class="cube-control-btns">
+              <button class="cube-cat-btn active" data-cat="all">전체</button>
+              <button class="cube-cat-btn" data-cat="base">🍚</button>
+              <button class="cube-cat-btn" data-cat="protein">🥩</button>
+              <button class="cube-cat-btn" data-cat="other">🥦</button>
+            </div>
+          </div>
+        </div>
         <div id="cube-list-active" class="cube-list"></div>
         <div id="cube-list-done" class="cube-list hidden"></div>
       </section>

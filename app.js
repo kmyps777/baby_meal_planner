@@ -708,6 +708,8 @@ function confirmCubePick() {
 // ════════════════════════════════════════
 let cubeItems = [], activeCubeTab = 'active', editingCubeId = null;
 let editIngredients = [], cubeNameManual = false;
+let cubeSortBy = 'expire';   // 'expire' | 'category'
+let cubeCatFilter = 'all';  // 'all' | 'base' | 'protein' | 'other'
 
 function initCubeTab() {
   loadCubes();
@@ -729,6 +731,26 @@ function initCubeTab() {
   });
   // 큐브 이름 수동 입력 시 자동완성 해제
   document.getElementById('cube-name').addEventListener('input', () => { cubeNameManual = true; });
+
+  // 정렬 버튼
+  document.querySelectorAll('.cube-sort-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.cube-sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      cubeSortBy = btn.dataset.sort;
+      renderCubeList();
+    };
+  });
+
+  // 카테고리 필터
+  document.querySelectorAll('.cube-cat-btn').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.cube-cat-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      cubeCatFilter = btn.dataset.cat;
+      renderCubeList();
+    };
+  });
 }
 
 function loadCubes() {
@@ -739,8 +761,39 @@ function loadCubes() {
 }
 
 function renderCubeList() {
-  const active = cubeItems.filter(c => c.status !== 'done').sort((a,b) => a.madeDate.localeCompare(b.madeDate));
-  const done   = cubeItems.filter(c => c.status === 'done').sort((a,b) => b.madeDate.localeCompare(a.madeDate));
+  const catOrder = { base:0, protein:1, other:2 };
+
+  function sortCubes(list) {
+    if (cubeSortBy === 'expire') {
+      // 유통기한 임박순, 같은 제조일은 저장순(id 순)
+      return list.slice().sort((a, b) => {
+        const expA = addDays(a.madeDate, a.expireDays||14);
+        const expB = addDays(b.madeDate, b.expireDays||14);
+        if (expA !== expB) return expA.localeCompare(expB);
+        return (a.id||'').localeCompare(b.id||'');
+      });
+    } else {
+      // 카테고리순, 같은 카테고리 안에서는 제조일 → 저장순
+      return list.slice().sort((a, b) => {
+        const catDiff = (catOrder[a.category]||0) - (catOrder[b.category]||0);
+        if (catDiff !== 0) return catDiff;
+        if (a.madeDate !== b.madeDate) return a.madeDate.localeCompare(b.madeDate);
+        return (a.id||'').localeCompare(b.id||'');
+      });
+    }
+  }
+
+  let active = cubeItems.filter(c => c.status !== 'done');
+  let done   = cubeItems.filter(c => c.status === 'done');
+
+  // 카테고리 필터
+  if (cubeCatFilter !== 'all') {
+    active = active.filter(c => c.category === cubeCatFilter);
+    done   = done.filter(c => c.category === cubeCatFilter);
+  }
+
+  active = sortCubes(active);
+  done   = done.slice().sort((a,b) => b.madeDate.localeCompare(a.madeDate));
 
   const activeList = document.getElementById('cube-list-active');
   const doneList   = document.getElementById('cube-list-done');
