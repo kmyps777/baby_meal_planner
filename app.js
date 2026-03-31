@@ -30,14 +30,25 @@ function userCol(col) {
 // ════════════════════════════════════════
 // AUTH
 // ════════════════════════════════════════
-// 리다이렉트 로그인 결과 처리
-auth.getRedirectResult().then(result => {
-  if (result && result.user) { currentUser = result.user; showApp(result.user); }
-}).catch(e => console.log('redirect result:', e));
-
 auth.onAuthStateChanged(user => {
+  console.log('onAuthStateChanged:', user);
   if (user) { currentUser = user; showApp(user); }
-  else       { currentUser = null; showLogin(); }
+  else {
+    // 리다이렉트 결과 확인
+    auth.getRedirectResult().then(result => {
+      console.log('getRedirectResult:', result);
+      if (result && result.user) {
+        currentUser = result.user;
+        showApp(result.user);
+      } else {
+        currentUser = null;
+        showLogin();
+      }
+    }).catch(e => {
+      console.error('getRedirectResult error:', e);
+      showLogin();
+    });
+  }
 });
 
 document.getElementById('btn-google-login').addEventListener('click', () => {
