@@ -840,8 +840,10 @@ async function deleteCube() {
 }
 
 // ════════════════════════════════════════
-// PWA
+// PWA - 서비스 워커 등록 해제 후 비활성화
 // ════════════════════════════════════════
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  navigator.serviceWorker.getRegistrations().then(regs => {
+    regs.forEach(reg => reg.unregister());
+  });
 }
