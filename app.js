@@ -52,7 +52,15 @@ auth.onAuthStateChanged(user => {
 });
 
 document.getElementById('btn-google-login').addEventListener('click', () => {
-  auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+  const provider = new firebase.auth.GoogleAuthProvider();
+  // PWA(홈화면) 모드에서는 popup, 브라우저에서는 redirect
+  const isPWA = window.navigator.standalone === true ||
+                window.matchMedia('(display-mode: standalone)').matches;
+  if (isPWA) {
+    auth.signInWithPopup(provider).catch(e => toast('로그인 실패: ' + e.message));
+  } else {
+    auth.signInWithRedirect(provider);
+  }
 });
 document.getElementById('btn-logout').addEventListener('click', () => auth.signOut());
 
