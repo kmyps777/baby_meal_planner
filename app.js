@@ -53,14 +53,16 @@ auth.onAuthStateChanged(user => {
 
 document.getElementById('btn-google-login').addEventListener('click', () => {
   const provider = new firebase.auth.GoogleAuthProvider();
-  // PWA(홈화면) 모드에서는 popup, 브라우저에서는 redirect
-  const isPWA = window.navigator.standalone === true ||
-                window.matchMedia('(display-mode: standalone)').matches;
-  if (isPWA) {
-    auth.signInWithPopup(provider).catch(e => toast('로그인 실패: ' + e.message));
-  } else {
-    auth.signInWithRedirect(provider);
-  }
+  // 팝업 먼저 시도, 실패하면 리다이렉트로 fallback
+  auth.signInWithPopup(provider).catch(err => {
+    if (err.code === 'auth/popup-blocked' ||
+        err.code === 'auth/popup-closed-by-user' ||
+        err.code === 'auth/cancelled-popup-request') {
+      auth.signInWithRedirect(provider);
+    } else {
+      toast('로그인 실패: ' + err.message);
+    }
+  });
 });
 document.getElementById('btn-logout').addEventListener('click', () => auth.signOut());
 
@@ -666,11 +668,10 @@ function exportMealExcel() {
   }
 
   // CSV 생성 (엑셀에서 열 수 있는 UTF-8 BOM)
-  const BOM = '﻿';
+  const BOM = '\uFEFF';
   const csv = BOM + rows.map(row =>
-    row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')
-  ).join('
-');
+    row.map(cell => '"' + String(cell).replace(/"/g, '""') + '"').join(',')
+  ).join('\n');
 
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url  = URL.createObjectURL(blob);
