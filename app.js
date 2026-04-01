@@ -324,12 +324,14 @@ let editingSlotId = null, currentSlotType = 'meal';
 let slotCubes = { base: [], protein: [], other: [] };
 let pickerCat = null, pickerSelected = [];
 let timeLabels = ['오전 이유식','오전 간식','점심 이유식','오후 간식','저녁 이유식'];
+let timeLabelsLoaded = false;
 
 function initMealTab() {
   const now = new Date();
   mealYear = now.getFullYear(); mealMonth = now.getMonth();
   loadMealData();
 
+  document.getElementById('btn-export-excel').onclick = openExportModal;
   document.getElementById('meal-prev').onclick = () => { mealMonth--; if(mealMonth<0){mealMonth=11;mealYear--;} renderMealCalendar(); };
   document.getElementById('meal-next').onclick = () => { mealMonth++; if(mealMonth>11){mealMonth=0;mealYear++;} renderMealCalendar(); };
   document.getElementById('btn-close-meal-panel').onclick = () => {
@@ -368,6 +370,14 @@ function initMealTab() {
 }
 
 function loadMealData() {
+  // 시간이름 목록 Firestore에서 불러오기
+  userCol('settings').doc('timeLabels').get().then(doc => {
+    if (doc.exists && doc.data().labels) {
+      timeLabels = doc.data().labels;
+    }
+    timeLabelsLoaded = true;
+  }).catch(() => { timeLabelsLoaded = true; });
+
   userCol('meals').onSnapshot(snap => {
     mealData = {};
     snap.docs.forEach(d => {
@@ -524,6 +534,7 @@ function selectTimeLabel(lbl) {
 }
 function removeTimeLabel(lbl) {
   timeLabels = timeLabels.filter(l => l !== lbl);
+  userCol('settings').doc('timeLabels').set({ labels: timeLabels }).catch(() => {});
   renderTimeLabelDropdown(document.getElementById('slot-time-label').value);
 }
 
@@ -581,7 +592,10 @@ async function saveSlot() {
   if (!selectedMealDate)  return toast('날짜를 먼저 선택해주세요');
 
   // 새 시간이름 저장
-  if (!timeLabels.includes(timeLabel)) timeLabels.push(timeLabel);
+  if (!timeLabels.includes(timeLabel)) {
+    timeLabels.push(timeLabel);
+    userCol('settings').doc('timeLabels').set({ labels: timeLabels }).catch(() => {});
+  }
 
   const existing = mealData[selectedMealDate] || [];
   const maxOrder = Math.max(0, ...existing.map(s => s.order||0));
@@ -606,6 +620,66 @@ async function saveSlot() {
     }
     closeModal('modal-meal-slot');
   } catch(e) { toast('저장 실패: ' + e.message); }
+}
+
+// ════════════════════════════════════════
+// 엑셀 내보내기
+// ════════════════════════════════════════
+function exportMealExcel() {
+  const year  = mealYear;
+  const month = mealMonth;
+  const title = `${year}년 ${month+1}월 이유식 식단표`;
+
+  // 해당 월의 날짜별 슬롯 모으기
+  const rows = [];
+
+  // 헤더
+  rows.push(['날짜', '요일', '끼니/간식', '종류', '베이스죽', '단백질', '기타', '총g', '간식내용']);
+
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const dayNames = ['일','월','화','수','목','금','토'];
+
+  for (let d = 1; d <= daysInMonth; d++) {
+    const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const dow = new Date(year, month, d).getDay();
+    const slots = (mealData[ds] || []).slice().sort((a,b) => (a.order||0)-(b.order||0));
+
+    if (slots.length === 0) {
+      rows.push([korDate(ds).split(' (')[0], dayNames[dow], '', '', '', '', '', '', '']);
+    } else {
+      slots.forEach((slot, i) => {
+        const dateCell  = i === 0 ? korDate(ds).split(' (')[0] : '';
+        const dowCell   = i === 0 ? dayNames[dow] : '';
+
+        if (slot.type === 'snack') {
+          rows.push([dateCell, dowCell, slot.timeLabel, '간식', '', '', '', '', slot.snackMemo||'']);
+        } else {
+          const cubes   = slot.cubes || [];
+          const base    = cubes.filter(c=>c.cat==='base').map(c=>`${c.cubeName}(${c.g}g)`).join(', ');
+          const protein = cubes.filter(c=>c.cat==='protein').map(c=>`${c.cubeName}(${c.g}g)`).join(', ');
+          const other   = cubes.filter(c=>c.cat==='other').map(c=>`${c.cubeName}(${c.g}g)`).join(', ');
+          const totalG  = cubes.reduce((s,c)=>s+(c.g||0),0);
+          rows.push([dateCell, dowCell, slot.timeLabel, '이유식', base, protein, other, totalG+'g', '']);
+        }
+      });
+    }
+  }
+
+  // CSV 생성 (엑셀에서 열 수 있는 UTF-8 BOM)
+  const BOM = '﻿';
+  const csv = BOM + rows.map(row =>
+    row.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')
+  ).join('
+');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement('a');
+  a.href     = url;
+  a.download = `${title}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast(`📥 ${title} 다운로드 완료!`);
 }
 
 async function deleteSlot() {

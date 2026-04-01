@@ -137,6 +137,17 @@ input, textarea, select { font-family: var(--font); }
   border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; transition: all .2s;
 }
 .btn-outline:hover { background: var(--primary-l); }
+.btn-outline.small { padding: 7px 12px; font-size: 13px; }
+
+/* 엑셀 내보내기 빠른선택 버튼 */
+.export-quick-btn {
+  padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600;
+  border: 1.5px solid var(--border); background: var(--surface2); color: var(--text2);
+  cursor: pointer; transition: all .15s;
+}
+.export-quick-btn:hover, .export-quick-btn.active {
+  background: var(--primary); color: white; border-color: var(--primary);
+}
 .btn-outline.full-width { width: 100%; display: flex; justify-content: center; }
 .btn-danger {
   padding: 10px 18px; background: var(--danger-l); color: var(--danger);
