@@ -627,6 +627,42 @@ async function saveSlot() {
 // ════════════════════════════════════════
 // 엑셀 내보내기
 // ════════════════════════════════════════
+function openExportModal() {
+  const now = new Date();
+  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+  const lastDay  = new Date(now.getFullYear(), now.getMonth()+1, 0);
+  document.getElementById('export-start').value = fmtDate(firstDay);
+  document.getElementById('export-end').value   = fmtDate(lastDay);
+
+  document.querySelectorAll('.export-quick-btn').forEach(btn => {
+    btn.classList.remove('active');
+    btn.onclick = () => {
+      document.querySelectorAll('.export-quick-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const today = new Date(); today.setHours(0,0,0,0);
+      const range = btn.dataset.range;
+      if (range === 'this-month') {
+        document.getElementById('export-start').value = fmtDate(new Date(today.getFullYear(), today.getMonth(), 1));
+        document.getElementById('export-end').value   = fmtDate(new Date(today.getFullYear(), today.getMonth()+1, 0));
+      } else if (range === 'last-month') {
+        document.getElementById('export-start').value = fmtDate(new Date(today.getFullYear(), today.getMonth()-1, 1));
+        document.getElementById('export-end').value   = fmtDate(new Date(today.getFullYear(), today.getMonth(), 0));
+      } else if (range === 'last-7') {
+        const s = new Date(today); s.setDate(s.getDate()-6);
+        document.getElementById('export-start').value = fmtDate(s);
+        document.getElementById('export-end').value   = fmtDate(today);
+      } else if (range === 'last-30') {
+        const s = new Date(today); s.setDate(s.getDate()-29);
+        document.getElementById('export-start').value = fmtDate(s);
+        document.getElementById('export-end').value   = fmtDate(today);
+      }
+    };
+  });
+
+  document.getElementById('btn-export-confirm').onclick = exportMealExcel;
+  openModal('modal-export');
+}
+
 function exportMealExcel() {
   const year  = mealYear;
   const month = mealMonth;
